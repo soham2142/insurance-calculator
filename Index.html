@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insurance Maturity & Surrender Calculator</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            text-align: center;
+            padding: 20px;
+            color: white;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: auto;
+            padding: 70px;
+            background: white;
+            border-radius: 15px;
+            border: 3px solid #2575fc;
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.2);
+            color: black;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+    
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    
+        label {
+            font-weight: 600;
+            display: block;
+            margin-top: 10px;
+            text-align: left;
+        }
+    
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 5px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+            transition: 0.3s;
+            outline: none;
+        }
+    
+        input:focus {
+            border-color: #2575fc;
+            box-shadow: 0px 0px 8px rgba(37, 117, 252, 0.5);
+        }
+    
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            border-radius: 8px;
+            border: none;
+            font-size: 18px;
+            background-color: #2575fc;
+            color: white;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+    
+        button:hover {
+            background-color: #6a11cb;
+            transform: scale(1.05);
+        }
+    
+        button:active {
+            transform: scale(0.95);
+        }
+    
+        h3 {
+            margin-top: 15px;
+            font-size: 20px;
+            color: #333;
+        }
+
+        /* Mobile View */
+    @media (max-width: 600px) {
+        .container {
+            max-width: 90%;
+            padding: 20px;
+        }
+
+        h2 {
+            font-size: 22px;
+        }
+
+        input, button {
+            font-size: 14px;
+            padding: 10px;
+        }
+    }
+
+    /* Tablet View */
+    @media (max-width: 1024px) {
+        .container {
+            max-width: 70%;
+        }
+    }
+
+    canvas {
+        width: 100%;
+        max-height: 300px;
+        margin-top: 20px;
+    }
+    
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Insurance Calculator</h2>
+        <label>Sum Assured (₹):</label>
+        <input type="number" id="sumAssured" placeholder="Enter sum assured">
+    
+        <label>Annual Premium (₹):</label>
+        <input type="number" id="premium" placeholder="Enter premium">
+    
+        <label>Policy Term (Years):</label>
+        <input type="number" id="policyTerm" placeholder="Enter policy term">
+    
+        <label>Bonus Rate (₹ per 1000 sum assured):</label>
+        <input type="number" id="bonusRate" placeholder="Enter bonus rate">
+    
+        <button onclick="calculateValues()">Calculate</button>
+    
+        <h3>Maturity Value: ₹<span id="maturityValue">0</span></h3>
+        <h3>Surrender Value: ₹<span id="surrenderValue">0</span></h3>
+    
+        <button onclick="addPolicy()">Add Policy</button>
+
+        <table id="comparisonTable" border="1">
+            <thead>
+                <tr>
+                    <th>Sum Assured</th>
+                    <th>Annual Premium</th>
+                    <th>Policy Term</th>
+                    <th>Maturity Value</th>
+                    <th>Surrender Value</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        
+
+        <!-- Canvas for Chart -->
+        <canvas id="maturityChart"></canvas>
+    </div>
+    
+    
+    <script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            let policies = [];
+        
+            function addPolicy() {
+                let sumAssured = document.getElementById("sumAssured").value;
+                let premium = document.getElementById("premium").value;
+                let policyTerm = document.getElementById("policyTerm").value;
+                let maturityValue = document.getElementById("maturityValue").innerText;
+                let surrenderValue = document.getElementById("surrenderValue").innerText;
+        
+                if (!sumAssured || !premium || !policyTerm || maturityValue === "0") {
+                    alert("Calculate values first!");
+                    return;
+                }
+        
+                let policy = { sumAssured, premium, policyTerm, maturityValue, surrenderValue };
+                policies.push(policy);
+                updateTable();
+            }
+        
+            function updateTable() {
+                let tableBody = document.querySelector("#comparisonTable tbody");
+                tableBody.innerHTML = "";
+        
+                policies.forEach(policy => {
+                    let row = `<tr>
+                        <td>₹${policy.sumAssured}</td>
+                        <td>₹${policy.premium}</td>
+                        <td>${policy.policyTerm} years</td>
+                        <td>₹${policy.maturityValue}</td>
+                        <td>₹${policy.surrenderValue}</td>
+                    </tr>`;
+                    tableBody.innerHTML += row;
+                });
+            }
+        </script>
+        
+
+        <script>
+            let maturityChart;  // Global variable for chart
+        
+            function calculateValues() {
+                let sumAssured = parseFloat(document.getElementById("sumAssured").value);
+                let premium = parseFloat(document.getElementById("premium").value);
+                let policyTerm = parseFloat(document.getElementById("policyTerm").value);
+                let bonusRate = parseFloat(document.getElementById("bonusRate").value);
+        
+                if (isNaN(sumAssured) || isNaN(premium) || isNaN(policyTerm) || isNaN(bonusRate)) {
+                    alert("Please enter all values correctly!");
+                    return;
+                }
+        
+                let totalBonus = (sumAssured / 1000) * bonusRate * policyTerm;
+                let maturityValue = sumAssured + totalBonus;
+        
+                let surrenderFactor = 0.5;
+                let paidPremiums = premium * policyTerm * surrenderFactor;
+                let surrenderValue = paidPremiums + (totalBonus * surrenderFactor);
+        
+                document.getElementById("maturityValue").innerText = maturityValue.toFixed(2);
+                document.getElementById("surrenderValue").innerText = surrenderValue.toFixed(2);
+        
+                drawChart(sumAssured, totalBonus);
+            }
+        
+            function drawChart(sumAssured, totalBonus) {
+                let ctx = document.getElementById("maturityChart").getContext("2d");
+        
+                if (maturityChart) {
+                    maturityChart.destroy();  // Clear previous chart before redrawing
+                }
+        
+                maturityChart = new Chart(ctx, {
+                    type: "doughnut",
+                    data: {
+                        labels: ["Sum Assured", "Bonus"],
+                        datasets: [{
+                            data: [sumAssured, totalBonus],
+                            backgroundColor: ["#2575fc", "#6a11cb"],
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: "bottom" }
+                        }
+                    }
+                });
+            }
+        </script>
+        
+</body>
+</html>
